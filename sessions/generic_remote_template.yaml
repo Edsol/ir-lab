@@ -1,0 +1,28 @@
+remote: tv_soggiorno
+brand: Unknown
+device_type: tv
+emitter: ir_blaster_battery
+samples: 2
+
+defaults: {}
+
+commands:
+  - name: power
+    label: Power
+    tags:
+      key: power
+
+  - name: volume_up
+    label: Volume +
+    tags:
+      key: volume_up
+
+  - name: volume_down
+    label: Volume -
+    tags:
+      key: volume_down
+
+  - name: mute
+    label: Mute
+    tags:
+      key: mute

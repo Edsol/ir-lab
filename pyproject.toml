@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ir-lab"
+version = "0.1.0"
+description = "Laboratorio locale per acquisire, salvare, convertire e analizzare codici IR via MQTT/Zigbee2MQTT."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "IR Lab contributors" }]
+dependencies = [
+  "paho-mqtt>=2.0.0",
+  "PyYAML>=6.0.1",
+  "InquirerPy>=0.3.4"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "ruff>=0.5.0"]
+# irtuya non è su PyPI: va installato dal repo Git.
+# Necessario solo per nec_codec (NEC decode/encode, Broadlink, auto-detect formato).
+# Il codec Tuya principale (tuya_codec.py) non dipende da irtuya.
+nec = ["irtuya @ git+https://github.com/pasthev/irtuya.git"]
+
+[project.scripts]
+ir-lab = "ir_lab.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ir_lab*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

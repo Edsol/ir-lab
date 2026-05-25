@@ -1,0 +1,192 @@
+# Sessione di acquisizione per decodifica completa del protocollo Midea IR
+#
+# SCOPO
+# Raccogliere i sample minimi necessari per mappare ogni campo del protocollo
+# e poter generare codici programmaticamente senza telecomando fisico.
+#
+# PREREQUISITI
+# - Condizionatore acceso e visibile (per leggere il display e confermare lo stato)
+# - Blaster IR puntato al condizionatore
+# - Acquisire 3 sample per ogni comando (per distinguere rolling counter da dati reali)
+#
+# PROCEDURA GENERALE
+# Per ogni comando: portare il condizionatore allo stato desiderato tramite
+# telecomando fisico, verificare il display, poi acquisire.
+# NON acquisire in sequenza automatica senza verificare lo stato sul display.
+#
+# PROCEDURA SWEEP TEMPERATURA (blocchi 1 e 2)
+# !! IMPORTANTE: partire SEMPRE dalla temperatura minima supportata (di solito 16°C) !!
+# 1. Accendere il condizionatore nella modalità desiderata (cool o heat), fan=auto.
+# 2. Portare la temperatura al minimo (16°C) con il telecomando fisico.
+# 3. Verificare sul display che mostri 16°C.
+# 4. Acquisire il comando cool_16_auto (o heat_16_auto).
+# 5. Premere una volta il tasto + sul telecomando → display mostra 17°C.
+# 6. Acquisire cool_17_auto. Ripetere fino a 25°C.
+# Nota: se si sbaglia un passo, segnarlo nei tag del sample (es. tag: skip=true)
+#       e riacquisire — non eliminare il sample errato.
+#
+# USO
+# ir-lab capture --session sessions/midea_protocol_decode.yaml --samples 3
+
+remote: midea_camera
+brand: Midea
+device_type: climate
+samples: 3
+
+defaults:
+  swing: unchanged
+  led: unchanged
+  turbo: off
+  sleep: off
+
+commands:
+
+  # ----------------------------------------------------------------
+  # BLOCCO 1: sweep temperatura in modalità COOL (fan=auto)
+  # Serve a: isolare il byte temperatura in B0/B1/B2
+  # Stato iniziale: cool, fan=auto, temp da portare al valore indicato
+  # GIÀ ACQUISITO: cool_temp (16°→25°) — verificare se i tag sono corretti
+  # ----------------------------------------------------------------
+  - name: cool_16_auto
+    label: Cool 16 Auto
+    tags: {power: on, mode: cool, temperature: 16, fan: auto}
+
+  - name: cool_17_auto
+    label: Cool 17 Auto
+    tags: {power: on, mode: cool, temperature: 17, fan: auto}
+
+  - name: cool_18_auto
+    label: Cool 18 Auto
+    tags: {power: on, mode: cool, temperature: 18, fan: auto}
+
+  - name: cool_19_auto
+    label: Cool 19 Auto
+    tags: {power: on, mode: cool, temperature: 19, fan: auto}
+
+  - name: cool_20_auto
+    label: Cool 20 Auto
+    tags: {power: on, mode: cool, temperature: 20, fan: auto}
+
+  - name: cool_21_auto
+    label: Cool 21 Auto
+    tags: {power: on, mode: cool, temperature: 21, fan: auto}
+
+  - name: cool_22_auto
+    label: Cool 22 Auto
+    tags: {power: on, mode: cool, temperature: 22, fan: auto}
+
+  - name: cool_23_auto
+    label: Cool 23 Auto
+    tags: {power: on, mode: cool, temperature: 23, fan: auto}
+
+  - name: cool_24_auto
+    label: Cool 24 Auto
+    tags: {power: on, mode: cool, temperature: 24, fan: auto}
+
+  - name: cool_25_auto
+    label: Cool 25 Auto
+    tags: {power: on, mode: cool, temperature: 25, fan: auto}
+
+  # ----------------------------------------------------------------
+  # BLOCCO 2: sweep temperatura in modalità HEAT (fan=auto)
+  # Serve a: confrontare encoding temperatura tra cool e heat,
+  #          isolare il byte modalità
+  # GIÀ ACQUISITO: heat_temp (16°→25°) — verificare se i tag sono corretti
+  # ----------------------------------------------------------------
+  - name: heat_16_auto
+    label: Heat 16 Auto
+    tags: {power: on, mode: heat, temperature: 16, fan: auto}
+
+  - name: heat_17_auto
+    label: Heat 17 Auto
+    tags: {power: on, mode: heat, temperature: 17, fan: auto}
+
+  - name: heat_18_auto
+    label: Heat 18 Auto
+    tags: {power: on, mode: heat, temperature: 18, fan: auto}
+
+  - name: heat_19_auto
+    label: Heat 19 Auto
+    tags: {power: on, mode: heat, temperature: 19, fan: auto}
+
+  - name: heat_20_auto
+    label: Heat 20 Auto
+    tags: {power: on, mode: heat, temperature: 20, fan: auto}
+
+  - name: heat_21_auto
+    label: Heat 21 Auto
+    tags: {power: on, mode: heat, temperature: 21, fan: auto}
+
+  - name: heat_22_auto
+    label: Heat 22 Auto
+    tags: {power: on, mode: heat, temperature: 22, fan: auto}
+
+  - name: heat_23_auto
+    label: Heat 23 Auto
+    tags: {power: on, mode: heat, temperature: 23, fan: auto}
+
+  - name: heat_24_auto
+    label: Heat 24 Auto
+    tags: {power: on, mode: heat, temperature: 24, fan: auto}
+
+  - name: heat_25_auto
+    label: Heat 25 Auto
+    tags: {power: on, mode: heat, temperature: 25, fan: auto}
+
+  # ----------------------------------------------------------------
+  # BLOCCO 3: sweep modalità a temperatura fissa (22°, fan=auto)
+  # Serve a: isolare il byte modalità (cool/heat/dry/auto/fan_only)
+  # cool_22 e heat_22 già coperti dai blocchi 1 e 2
+  #
+  # Sequenza ciclica tasto MODE su questo telecomando:
+  #   fan_only → cool → dry → auto → heat → (ricomincia)
+  # Icone display: fan_only=frecce ventola, cool=fiocco neve, dry=goccioline, auto=FAN AUTO, heat=sole
+  #
+  # Procedura: portare alla modalità desiderata, verificare icona sul display, acquisire.
+  # ----------------------------------------------------------------
+  - name: dry_22_auto
+    label: Dry 22 Auto
+    tags: {power: on, mode: dry, temperature: 22, fan: auto}
+
+  - name: auto_22_auto
+    label: Auto 22 Auto
+    tags: {power: on, mode: auto, temperature: 22, fan: auto}
+
+  - name: fan_only_auto
+    label: Fan Only Auto
+    tags: {power: on, mode: fan_only, fan: auto}
+
+  # ----------------------------------------------------------------
+  # BLOCCO 4: sweep velocità fan (cool 22°)
+  # Serve a: isolare il byte fan speed e confermare rolling counter
+  # Procedura: portare il condizionatore a cool 22° fan=auto,
+  # poi SENZA cambiare altro premere il tasto fan fino allo stato indicato
+  # e acquisire immediatamente.
+  # ----------------------------------------------------------------
+  - name: cool_22_fan_auto
+    label: Cool 22 Fan Auto
+    tags: {power: on, mode: cool, temperature: 22, fan: auto}
+
+  - name: cool_22_fan_low
+    label: Cool 22 Fan Low
+    tags: {power: on, mode: cool, temperature: 22, fan: low}
+
+  - name: cool_22_fan_mid
+    label: Cool 22 Fan Mid
+    tags: {power: on, mode: cool, temperature: 22, fan: mid}
+
+  - name: cool_22_fan_high
+    label: Cool 22 Fan High
+    tags: {power: on, mode: cool, temperature: 22, fan: high}
+
+  # ----------------------------------------------------------------
+  # BLOCCO 5: power on/off per modalità diverse
+  # Serve a: capire se il codice power include lo stato o è generico
+  # ----------------------------------------------------------------
+  - name: power_on_cool
+    label: Power On (Cool)
+    tags: {power: on, mode: cool, temperature: 22, fan: auto}
+
+  - name: power_off
+    label: Power Off
+    tags: {power: off}

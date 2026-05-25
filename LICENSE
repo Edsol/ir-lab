@@ -1,0 +1,27 @@
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2026 IR Lab contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+NOTE LICENZA
+------------
+IR Lab usa come dipendenza opzionale irtuya (https://github.com/pasthev/irtuya),
+licenziato GPL-3.0. Per questo motivo IR Lab adotta GPL-3.0-or-later.
+
+Il modulo ir_lab/tuya_codec.py è una reimplementazione originale del formato
+Tuya IR, scritta da zero senza copiare codice da irtuya o altri progetti GPL.

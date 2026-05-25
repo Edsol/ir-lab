@@ -1,0 +1,42 @@
+# Avvio: ir-lab capture --session sessions/midea_cool_sweep.yaml --samples 2
+
+remote: midea_camera
+brand: Midea
+device_type: climate
+emitter: ir_blaster_battery
+samples: 1
+
+defaults:
+  power: on
+  mode: cool
+  fan: auto
+  swing: unchanged
+  led: unchanged
+  turbo: off
+  sleep: off
+
+commands:
+  - name: cool_21_auto
+    label: Cool 21 Auto
+    tags:
+      temperature: 21
+
+  - name: cool_22_auto
+    label: Cool 22 Auto
+    tags:
+      temperature: 22
+
+  - name: cool_23_auto
+    label: Cool 23 Auto
+    tags:
+      temperature: 23
+
+  - name: cool_24_auto
+    label: Cool 24 Auto
+    tags:
+      temperature: 24
+
+  - name: cool_25_auto
+    label: Cool 25 Auto
+    tags:
+      temperature: 25
