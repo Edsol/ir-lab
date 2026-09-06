@@ -4,20 +4,24 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 
-A local Python workbench for capturing, storing, replaying and analysing IR
-codes learned through an IR blaster managed by Zigbee2MQTT/MQTT.
+**From captured IR signals to protocol generators.**
 
-## What it is for
+A Python workbench for capturing remote commands, understanding their structure,
+and generating new codes for Home Assistant.
 
-Most IR solutions for home automation are **archives**: you capture or import
-one code per state, and for an air conditioner that means hundreds of codes
-(mode x temperature x fan x swing).
+## Why IR Lab?
 
-IR Lab takes the opposite route. It exists to understand a protocol well enough
-to **generate** any code on the fly, without ever having seen it. The output of
-that work are the generators in [`ir_lab/generators/`](ir_lab/generators/),
-which are then ported to [IRBridge](https://github.com/Edsol/irbridge), the
-Home Assistant integration that uses them in production.
+An air conditioner remote often sends the **entire state** in each IR message:
+mode, temperature, fan speed and swing. Saving one code for every combination
+can mean collecting hundreds of codes.
+
+IR Lab helps you capture controlled samples, find which bits change, and turn
+those findings into a **protocol generator**. Once a protocol is understood and
+verified, you can generate supported states you never captured individually.
+
+This is the reverse-engineering workbench. For everyday Home Assistant control,
+use [IRBridge](https://github.com/Edsol/irbridge), the separate integration where
+the verified generators are used.
 
 ```
 physical remote
@@ -32,40 +36,47 @@ ir_lab/generators/<protocol>.py      (the protocol, in Python)
 IRBridge                             (Home Assistant, codes generated on the fly)
 ```
 
-## Philosophy
+## What you can do
 
-IR Lab is not the finished remote. It is the workbench for:
+- **Capture:** learn individual commands or work through a YAML session, with
+  an interactive wizard, tags and multiple samples per command.
+- **Inspect:** decode Tuya payloads into raw timings, frames, bits and hex;
+  compare commands while keeping the original data and decoding errors.
+- **Verify:** replay captured codes through MQTT and generate new codes with
+  the Midea and Electra generators.
+- **Cross-check:** query the Tuya Cloud IR library to compare known codes
+  against your samples (optional, requires credentials).
 
-1. putting the blaster into learning mode;
-2. reading several codes in sequence;
-3. attaching a name and functional metadata to each code;
-4. storing the original Tuya code;
-5. converting it to raw timings;
-6. analysing header, bits, frames and hex;
-7. comparing samples and similar commands;
-8. replaying a code to test it;
-9. preparing the work for Home Assistant.
+Everything runs locally from the CLI, with samples stored in JSON.
 
-## Current state
+## A small discovery: where is the temperature?
 
-- `ir-lab` CLI;
-- interactive wizard with Inquirer-style prompts via `InquirerPy`;
-- MQTT configuration through `config.yaml`;
-- single acquisition (`learn`);
-- sequential acquisition from YAML (`capture`);
-- local JSON storage (`data/remotes.json`);
-- code replay (`send`);
-- Tuya base64 -> raw conversion;
-- raw -> Tuya base64 conversion using uncompressed literal blocks;
-- generic raw -> frame/bit/hex analysis;
-- command comparison (`compare`);
-- protocol generators (`generate`) for Midea/Ferroli and Electra/AUX/Beko;
-- Tuya Cloud client for querying the official IR library.
+Keep mode at `cool` and fan at `auto`, then capture a temperature sweep.
+These three rows come from the [verified Midea sweep](docs/protocol_midea.md):
 
-There is no web UI and no Home Assistant integration here: that is
-[IRBridge](https://github.com/Edsol/irbridge), a separate project.
+| Temperature | Frame 1 bytes | Temperature byte (B1) |
+|---|---|---|
+| 21 °C | 86 **60** 07 0A | `0x60` |
+| 22 °C | 86 **E0** 07 0A | `0xE0` |
+| 23 °C | 86 **10** 07 0A | `0x10` |
 
-### Reverse-engineered protocols
+The second byte changes, but it does not count up in ordinary hexadecimal.
+For this mode, subtract 15 from the temperature, reverse the resulting four
+bits, and place them in the high nibble: at 22 °C, `7 → 0111 → 1110 → 0xE0`.
+
+This is an excerpt of the documented analysis, with the rolling-counter bit
+normalised to zero and the fixed three-bit frame tail omitted. The second
+frame also has a temperature-dependent field; the full protocol notes describe
+both. A generator must reproduce the complete message, then be verified on the
+device.
+
+To compare your own captured commands:
+
+```bash
+ir-lab compare --remote midea_bedroom --commands cool_21_auto cool_22_auto cool_23_auto
+```
+
+## Supported generators
 
 | Protocol | Devices | Temp | Fan | Swing |
 |---|---|---|---|---|
@@ -75,9 +86,23 @@ There is no web UI and no Home Assistant integration here: that is
 Midea fan speed has not been isolated yet: it needs samples with mode and
 temperature held fixed and only the fan speed changing.
 
+## Requirements
+
+- **Python 3.11+** for the CLI.
+- **For capture and replay:** an MQTT broker, Zigbee2MQTT, and a compatible IR
+  blaster exposing `learn_ir_code` and `ir_code_to_send`. The setup below uses
+  the Tuya iH-F8260.
+- **For learning a new protocol:** the physical remote and the target device
+  to verify captured and generated commands.
+
+Decoding, encoding, analysing saved samples and generating codes work offline,
+without a blaster or MQTT connection. Sending a generated code requires the
+hardware setup above.
+
 ## Installation
 
 ```bash
+git clone https://github.com/Edsol/ir-lab.git
 cd ir-lab
 python3 -m venv .venv
 source .venv/bin/activate
@@ -92,6 +117,8 @@ pytest
 ```
 
 ## Configuration
+
+For capture and replay, configure your MQTT connection and emitter:
 
 ```bash
 cp config.example.yaml config.yaml
@@ -209,10 +236,10 @@ SKILL.md                         Guide for analysing captures with an LLM
 
 ## Analysing captures with an LLM
 
-Reading diffs between frames to find the temperature field and the checksum is
-work a language model does well, given the right framing.
-[`SKILL.md`](SKILL.md) is a tool-agnostic guide for exactly that: point any LLM
-at it along with your `ir-lab compare` output.
+An LLM can help propose field mappings and checksum hypotheses from frame
+diffs. [`SKILL.md`](SKILL.md) is a tool-agnostic guide: provide it alongside
+your `ir-lab compare` output, then check each hypothesis against additional
+samples and verify generated commands on the device.
 
 ## Tuya Cloud (optional)
 
