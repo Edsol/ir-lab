@@ -1,3 +1,5 @@
+![IR Lab — from captured IR signals to protocol generators: capture, analyze, generate.](docs/images/banner.png)
+
 # IR Lab
 
 [![CI](https://github.com/Edsol/ir-lab/actions/workflows/ci.yaml/badge.svg)](https://github.com/Edsol/ir-lab/actions/workflows/ci.yaml)
