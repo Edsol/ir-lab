@@ -10,15 +10,17 @@ Non e' ancora l'integrazione Home Assistant finale. Il progetto serve a produrre
 
 ## Obiettivo finale
 
-Portare i telecomandi in Home Assistant, possibilmente in modo progressivo:
+Capire i protocolli abbastanza bene da generare qualsiasi codice al volo, e
+portare quei generatori in Home Assistant.
 
-1. dataset codici appresi;
-2. script HA generati;
-3. servizio Python locale per invio;
-4. MQTT Discovery;
-5. custom integration/add-on;
-6. entita' remote/climate/media_player;
-7. generazione dinamica del protocollo quando possibile.
+L'integrazione HA esiste gia' ed e' un repo separato:
+[IRBridge](https://github.com/Edsol/irbridge). Un protocollo nuovo nasce qui
+(acquisizione, analisi, generatore verificato) e viene poi portato la' come
+`ClimateGenerator`.
+
+I due progetti restano separati: il reverse-engineering e' lavoro da terminale,
+l'integrazione dev'essere installabile via HACS senza trascinarsi dietro gli
+strumenti di laboratorio.
 
 ## Principio guida
 
@@ -42,6 +44,16 @@ ir_lab/storage.py               storage JSON
 ir_lab/tuya_codec.py            Tuya base64 <-> raw timings
 ir_lab/raw_analyzer.py          analisi raw/frame/hex
 ir_lab/prompts.py               prompt interattivi stile Inquirer
+ir_lab/generators/              protocolli reverse-engineerati (midea, electra)
+ir_lab/tuya_cloud.py            client libreria IR di Tuya Cloud
+CONTRIBUTING.md                 come aggiungere un protocollo
+NOTICE.md                       note di licenza
+```
+
+Fuori da questo repo, ma parte dello stesso lavoro:
+
+```text
+github.com/Edsol/irbridge       integrazione Home Assistant che usa i generatori
 ```
 
 ## Comandi utili
@@ -62,6 +74,14 @@ ir-lab learn --remote midea_camera --command cool_22_auto --tags mode=cool,tempe
 ir-lab send --remote midea_camera --command cool_22_auto
 ir-lab analyze --remote midea_camera
 ir-lab compare --remote midea_camera --commands cool_21_auto cool_22_auto cool_23_auto
+ir-lab generate --protocol midea --mode cool --temp 22
+```
+
+Prima di committare:
+
+```bash
+ruff check ir_lab tests
+pytest
 ```
 
 ## Stile di sviluppo
@@ -73,7 +93,7 @@ ir-lab compare --remote midea_camera --commands cool_21_auto cool_22_auto cool_2
 - Separare bene MQTT, codec, analisi e storage.
 - Non nascondere il dato originale: salvare sempre `tuya` e `raw`.
 - Non eliminare sample: aggiungere nuovi campioni e confrontarli.
-- Gli errori CLI devono essere comprensibili, in italiano se possibile.
+- CLI errors must be clear and in English (the project is public).
 
 ## Prompt interattivi
 

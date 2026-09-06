@@ -28,20 +28,20 @@ def confirm(message: str, *, default: bool = False) -> bool:
 def select(message: str, choices: Iterable[str], *, default: str | None = None) -> str:
     choices_list = list(choices)
     if not choices_list:
-        raise ValueError("select senza scelte")
+        raise ValueError("select() called with no choices")
     if inquirer:
         return str(inquirer.select(message=message, choices=choices_list, default=default).execute())
     print(message)
     for index, choice in enumerate(choices_list, start=1):
         marker = "*" if choice == default else " "
         print(f"  {index}) {choice} {marker}")
-    raw = input("Numero scelta: ").strip()
+    raw = input("Choice number: ").strip()
     if not raw and default:
         return default
     return choices_list[int(raw) - 1]
 
 
-def press_enter(message: str = "Premi INVIO per continuare") -> None:
+def press_enter(message: str = "Press ENTER to continue") -> None:
     input(f"{message}...")
 
 

@@ -27,9 +27,9 @@ class RemoteStore:
             with self.path.open("r", encoding="utf-8") as handle:
                 data = json.load(handle)
         except Exception as exc:  # noqa: BLE001
-            raise StorageError(f"Impossibile leggere {self.path}: {exc}") from exc
+            raise StorageError(f"Cannot read {self.path}: {exc}") from exc
         if not isinstance(data, dict):
-            raise StorageError(f"{self.path} non contiene un oggetto JSON")
+            raise StorageError(f"{self.path} does not contain a JSON object")
         data.setdefault("schema_version", SCHEMA_VERSION)
         data.setdefault("remotes", {})
         return data
@@ -43,7 +43,7 @@ class RemoteStore:
                 handle.write("\n")
             tmp.replace(self.path)
         except Exception as exc:  # noqa: BLE001
-            raise StorageError(f"Impossibile scrivere {self.path}: {exc}") from exc
+            raise StorageError(f"Cannot write {self.path}: {exc}") from exc
 
     def ensure_remote(
         self,
@@ -126,7 +126,7 @@ class RemoteStore:
         try:
             return self.data["remotes"][remote]
         except KeyError as exc:
-            raise StorageError(f"Remote '{remote}' non trovato") from exc
+            raise StorageError(f"Remote '{remote}' not found") from exc
 
     def list_commands(self, remote: str) -> list[str]:
         return sorted(self.get_remote(remote).get("commands", {}))
@@ -136,13 +136,13 @@ class RemoteStore:
         try:
             return remote_obj["commands"][command]
         except KeyError as exc:
-            raise StorageError(f"Comando '{remote}/{command}' non trovato") from exc
+            raise StorageError(f"Command '{remote}/{command}' not found") from exc
 
     def get_sample(self, remote: str, command: str, sample: str | int = "active") -> dict[str, Any]:
         command_obj = self.get_command(remote, command)
         samples = command_obj.get("samples") or []
         if not samples:
-            raise StorageError(f"Comando '{remote}/{command}' senza samples")
+            raise StorageError(f"Command '{remote}/{command}' has no samples")
         if sample == "active":
             index = int(command_obj.get("active_sample_index", len(samples) - 1))
         elif sample == "latest":
@@ -152,12 +152,12 @@ class RemoteStore:
         try:
             return samples[index]
         except IndexError as exc:
-            raise StorageError(f"Sample index {index} non valido per '{remote}/{command}'") from exc
+            raise StorageError(f"Invalid sample index {index} for '{remote}/{command}'") from exc
 
     def delete_command(self, remote: str, command: str) -> None:
         remote_obj = self.get_remote(remote)
         if command not in remote_obj.get("commands", {}):
-            raise StorageError(f"Comando '{remote}/{command}' non trovato")
+            raise StorageError(f"Command '{remote}/{command}' not found")
         del remote_obj["commands"][command]
         remote_obj.setdefault("meta", {})["updated_at"] = utc_now_iso()
 
@@ -165,7 +165,7 @@ class RemoteStore:
         command_obj = self.get_command(remote, command)
         samples = command_obj.get("samples") or []
         if index < 0 or index >= len(samples):
-            raise StorageError(f"Sample index {index} non valido per '{remote}/{command}' ({len(samples)} sample)")
+            raise StorageError(f"Invalid sample index {index} for '{remote}/{command}' ({len(samples)} samples)")
         samples.pop(index)
         if not samples:
             self.delete_command(remote, command)

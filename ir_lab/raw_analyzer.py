@@ -37,21 +37,21 @@ def analyze_raw(raw: list[int], options: AnalyzerOptions | None = None) -> dict[
         result["header"] = [raw[0], raw[1]]
         start = 2
     if (len(raw) - start) % 2:
-        result["warnings"].append("Durate dispari dopo header: ultima durata ignorata")
+        result["warnings"].append("Odd number of durations after header: last one ignored")
     pairs = [(raw[pos], raw[pos + 1]) for pos in range(start, len(raw) - 1, 2)]
     normal_pairs = [(mark, space) for mark, space in pairs if space < options.gap_space_min_us]
     gap_values = [space for _, space in pairs if space >= options.gap_space_min_us]
     result["gap_values"] = gap_values
     result["gap_median"] = int(median(gap_values)) if gap_values else None
     if not normal_pairs:
-        result["warnings"].append("Nessuna coppia bit-like trovata")
+        result["warnings"].append("No bit-like pairs found")
         return result
     marks = [mark for mark, _ in normal_pairs if mark <= options.max_pair_mark_us]
     spaces = [space for _, space in normal_pairs]
     result["bit_mark_median"] = int(median(marks)) if marks else None
     short_spaces, long_spaces = split_two_clusters(spaces)
     if not short_spaces or not long_spaces:
-        result["warnings"].append("Impossibile separare zero/one in due cluster")
+        result["warnings"].append("Cannot separate zero/one into two clusters")
         return result
     zero_median = int(median(short_spaces))
     one_median = int(median(long_spaces))
@@ -114,7 +114,7 @@ def bits_to_hex(bits: str) -> str:
 
 def format_analysis(analysis: dict[str, Any]) -> str:
     lines: list[str] = []
-    lines.append(f"timings: {analysis.get('timing_count')} | durata: {analysis.get('duration_us')} us")
+    lines.append(f"timings: {analysis.get('timing_count')} | duration: {analysis.get('duration_us')} us")
     if analysis.get("header"):
         lines.append(f"header: {analysis['header']}")
     if analysis.get("zero_space_median") is not None:

@@ -13,3 +13,6 @@ data/*.json
 
 # macOS
 .DS_Store
+
+# Repo separato: github.com/Edsol/irbridge
+irbridge/

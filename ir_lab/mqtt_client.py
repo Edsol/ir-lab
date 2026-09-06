@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import threading
-import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,7 +18,7 @@ _IR_BLASTER_MODEL_IDS = {
 
 
 def discover_ir_blasters(settings: MqttSettings, *, timeout: int = 5) -> list[EmitterSettings]:
-    """Scopre i blaster IR disponibili ascoltando zigbee2mqtt/bridge/devices.
+    """Discover available IR blasters by listening on zigbee2mqtt/bridge/devices.
 
     Si connette al broker, attende il messaggio di inventory di Zigbee2MQTT
     e filtra i device il cui model_id è nella lista _IR_BLASTER_MODEL_IDS
@@ -29,7 +28,7 @@ def discover_ir_blasters(settings: MqttSettings, *, timeout: int = 5) -> list[Em
     compatibile con il resto del progetto.
     """
     if mqtt is None:
-        raise MqttError("Dipendenza mancante: installa paho-mqtt")
+        raise MqttError("Missing dependency: install paho-mqtt")
 
     event = threading.Event()
     found: list[EmitterSettings] = []
@@ -78,7 +77,7 @@ def discover_ir_blasters(settings: MqttSettings, *, timeout: int = 5) -> list[Em
     try:
         client.connect(settings.host, settings.port, settings.keepalive)
     except Exception as exc:  # noqa: BLE001
-        raise MqttError(f"Connessione MQTT fallita durante discovery: {exc}") from exc
+        raise MqttError(f"MQTT connection failed during discovery: {exc}") from exc
 
     client.loop_start()
     try:
@@ -123,7 +122,7 @@ class LearnedCode:
 class MqttIrClient:
     def __init__(self, settings: MqttSettings):
         if mqtt is None:
-            raise MqttError("Dipendenza mancante: installa paho-mqtt")
+            raise MqttError("Missing dependency: install paho-mqtt")
         self.settings = settings
         self.client = self._new_client()
 
@@ -143,7 +142,7 @@ class MqttIrClient:
         try:
             self.client.connect(self.settings.host, self.settings.port, self.settings.keepalive)
         except Exception as exc:  # noqa: BLE001
-            raise MqttError(f"Connessione MQTT fallita: {exc}") from exc
+            raise MqttError(f"MQTT connection failed: {exc}") from exc
 
     def disconnect(self) -> None:
         try:
@@ -156,7 +155,7 @@ class MqttIrClient:
         result = self.client.publish(topic, data, qos=0, retain=retain)
         result.wait_for_publish(timeout=5)
         if result.rc != 0:
-            raise MqttError(f"Publish MQTT fallita su {topic}: rc={result.rc}")
+            raise MqttError(f"MQTT publish failed on {topic}: rc={result.rc}")
 
     def send_tuya_code(self, emitter: EmitterSettings, code: str) -> None:
         connected = threading.Event()
@@ -177,7 +176,7 @@ class MqttIrClient:
         try:
             self.connect()
             if not connected.wait(timeout=10):
-                raise MqttError("Timeout connessione MQTT")
+                raise MqttError("MQTT connection timed out")
             self.publish_json(emitter.topic_set, {"ir_code_to_send": code})
             published.wait(timeout=5)
         finally:
@@ -209,10 +208,10 @@ class MqttIrClient:
         self.client.loop_start()
         try:
             self.publish_json(emitter.topic_set, {"learn_ir_code": True})
-            print(f"In ascolto su {emitter.topic_state} (timeout {timeout}s)...")
+            print(f"Listening on {emitter.topic_state} (timeout {timeout}s)...")
             if not event.wait(timeout=timeout):
                 raise MqttError(
-                    f"Timeout: nessun learned_ir_code ricevuto da {emitter.topic_state} "
+                    f"Timed out: no learned_ir_code received from {emitter.topic_state} "
                     f"entro {timeout}s. Verifica che il blaster sia raggiungibile e "
                     f"supporti learn_ir_code."
                 )

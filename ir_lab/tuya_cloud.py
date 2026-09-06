@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 import time
 from typing import Any
 
@@ -55,7 +54,7 @@ class TuyaCloudClient:
         resp = requests.get(self.base_url + path, headers=headers, timeout=10)
         data = resp.json()
         if not data.get("success"):
-            raise TuyaCloudError(f"Autenticazione Tuya fallita: {data.get('msg', data)}")
+            raise TuyaCloudError(f"Tuya authentication failed: {data.get('msg', data)}")
         result = data["result"]
         self._token = result["access_token"]
         self._token_expires = time.time() + result["expire_time"] - 60
@@ -74,31 +73,31 @@ class TuyaCloudClient:
         resp = requests.get(self.base_url + path, headers=headers, timeout=10)
         data = resp.json()
         if not data.get("success"):
-            raise TuyaCloudError(f"Tuya API errore su {path}: {data.get('msg', data)}")
+            raise TuyaCloudError(f"Tuya API error on {path}: {data.get('msg', data)}")
         return data["result"]
 
     # ── IR Library ──────────────────────────────────────────────────────────
 
     def get_categories(self) -> list[dict]:
-        """Lista categorie IR (es. 'Air Conditioner', 'TV', ...)."""
+        """List IR categories (e.g. 'Air Conditioner', 'TV', ...)."""
         return self._get("/v2.0/infrareds/0/categories")
 
     def get_brands(self, category_id: int) -> list[dict]:
-        """Lista brand per categoria."""
+        """List brands for a category."""
         return self._get(f"/v2.0/infrareds/0/categories/{category_id}/brands")
 
     def get_remotes(self, category_id: int, brand_id: int) -> list[dict]:
-        """Lista telecomandi disponibili per brand."""
+        """List remotes available for a brand."""
         return self._get(f"/v2.0/infrareds/0/categories/{category_id}/brands/{brand_id}/remotes")
 
     def get_keys(self, category_id: int, brand_id: int, remote_index: int) -> list[dict]:
-        """Lista tasti con codici IR per un telecomando."""
+        """List the keys, with IR codes, for one remote."""
         return self._get(
             f"/v2.0/infrareds/0/categories/{category_id}/brands/{brand_id}/remotes/{remote_index}/rules"
         )
 
     def search_brand(self, category_id: int, name: str) -> list[dict]:
-        """Cerca brand per nome (case-insensitive)."""
+        """Search brands by name (case-insensitive)."""
         brands = self.get_brands(category_id)
         name_lower = name.lower()
         return [b for b in brands if name_lower in b.get("brand_name", "").lower()]

@@ -57,7 +57,7 @@ class AppConfig:
         if len(self.emitters) == 1:
             return next(iter(self.emitters.values()))
         choices = ", ".join(sorted(self.emitters))
-        raise ConfigError(f"Specifica un emitter. Disponibili: {choices}")
+        raise ConfigError(f"Multiple emitters configured, pick one with --emitter. Available: {choices}")
 
 
 def _none_if_empty(value: Any) -> str | None:
@@ -71,14 +71,14 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
     config_path = Path(path)
     if not config_path.exists():
         raise ConfigError(
-            f"Config non trovata: {config_path}. Copia config.example.yaml in config.yaml e modificalo."
+            f"Config not found: {config_path}. Copy config.example.yaml to config.yaml and edit it."
         )
     with config_path.open("r", encoding="utf-8") as handle:
         raw = yaml.safe_load(handle) or {}
     mqtt_raw = raw.get("mqtt") or {}
     host = mqtt_raw.get("host")
     if not host:
-        raise ConfigError("config.yaml: mqtt.host e' obbligatorio")
+        raise ConfigError("config.yaml: mqtt.host is required")
     mqtt = MqttSettings(
         host=str(host),
         port=int(mqtt_raw.get("port", 1883)),
@@ -89,7 +89,7 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
     )
     emitters_raw = raw.get("emitters") or {}
     if not isinstance(emitters_raw, dict):
-        raise ConfigError("config.yaml: emitters deve essere un dizionario")
+        raise ConfigError("config.yaml: emitters must be a mapping")
     emitters: dict[str, EmitterSettings] = {}
     for name, emitter_raw in emitters_raw.items():
         emitter_raw = emitter_raw or {}

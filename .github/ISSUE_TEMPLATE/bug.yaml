@@ -1,0 +1,32 @@
+name: Bug
+description: Something does not work as it should
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The exact `ir-lab` command, and the full error output.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Python version
+      placeholder: "3.11.7"
+
+  - type: input
+    id: hardware
+    attributes:
+      label: IR blaster
+      placeholder: "e.g. Tuya ZS05 over Zigbee2MQTT 2.x"

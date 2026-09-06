@@ -12,7 +12,6 @@
 
 from __future__ import annotations
 
-import struct
 from ..tuya_codec import encode_tuya_ir
 
 # ── Costanti di protocollo ──────────────────────────────────────────────────
@@ -196,7 +195,6 @@ def verify_against_db(db_path: str = "data/remotes.json") -> dict[str, list[str]
     """
     import json
     from pathlib import Path
-    from ..raw_analyzer import analyze_raw
 
     with Path(db_path).open() as f:
         db = json.load(f)

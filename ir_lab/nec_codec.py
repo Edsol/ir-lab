@@ -72,11 +72,11 @@ def decode_nec(raw: list[int]) -> dict[str, object]:
     try:
         sequence = _irtuya.decode_raw_to_nec_sequence(raw)
     except Exception as exc:
-        raise CodecError(f"Impossibile decodificare NEC: {exc}") from exc
+        raise CodecError(f"Cannot decode NEC: {exc}") from exc
     try:
         short = _irtuya.decode_nec_sequence_to_short(sequence)
     except Exception as exc:
-        raise CodecError(f"Impossibile decodificare NEC short: {exc}") from exc
+        raise CodecError(f"Cannot decode NEC short: {exc}") from exc
     extended = len(sequence) >= 4 and sequence[0] != (~sequence[1] & 0xFF)
     return {"sequence": sequence, "short": short, "extended": extended}
 
@@ -96,16 +96,16 @@ def encode_nec(address: int, command: int, *, extended: bool = False, repeats: i
         sequence = _irtuya.encode_short_to_nec_sequence(short_bytes, is_nec_extended=extended)
         return _irtuya.encode_nec_sequence_to_raw(sequence, repeats_count=repeats)
     except Exception as exc:
-        raise CodecError(f"Impossibile codificare NEC: {exc}") from exc
+        raise CodecError(f"Cannot encode NEC: {exc}") from exc
 
 
 def decode_broadlink(hex_code: str) -> list[int]:
-    """Decodifica un codice Broadlink hex in raw timings."""
+    """Decode a Broadlink hex code into raw timings."""
     _require_irtuya()
     try:
         return _irtuya.decode_broadlink_hex_to_raw(hex_code)
     except Exception as exc:
-        raise CodecError(f"Impossibile decodificare Broadlink: {exc}") from exc
+        raise CodecError(f"Cannot decode Broadlink: {exc}") from exc
 
 
 def encode_broadlink(raw: list[int]) -> bytes:
@@ -114,4 +114,4 @@ def encode_broadlink(raw: list[int]) -> bytes:
     try:
         return _irtuya.encode_raw_to_broadlink_code(raw)
     except Exception as exc:
-        raise CodecError(f"Impossibile codificare Broadlink: {exc}") from exc
+        raise CodecError(f"Cannot encode Broadlink: {exc}") from exc

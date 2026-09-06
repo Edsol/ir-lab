@@ -1,5 +1,5 @@
-# Copia questo file in config.yaml e modifica host MQTT.
-# Pensato per Zigbee2MQTT + Tuya iH-F8260, ma i topic possono essere adattati.
+# Copy this file to config.yaml and set your MQTT host.
+# Written for Zigbee2MQTT + Tuya iH-F8260, but the topics can be adapted.
 
 mqtt:
   host: 192.168.1.10
@@ -9,13 +9,13 @@ mqtt:
   client_id: ir-lab
   keepalive: 60
 
-# La sezione emitters è opzionale.
-# Se omessa o vuota, ir-lab scopre automaticamente i blaster IR
-# ascoltando zigbee2mqtt/bridge/devices all'avvio.
+# The emitters section is optional.
+# When omitted or empty, ir-lab discovers IR blasters automatically by
+# listening on zigbee2mqtt/bridge/devices at startup.
 #
-# Configura emitters manualmente solo se la discovery automatica non funziona
-# (es. broker non è Zigbee2MQTT, dispositivo ha model_id non riconosciuto)
-# o se vuoi fissare un nome/topic personalizzato.
+# Configure emitters by hand only when auto-discovery does not work
+# (broker is not Zigbee2MQTT, device has an unrecognised model_id)
+# or when you want to pin a custom name/topic.
 #
 # emitters:
 #   ir_blaster_battery:

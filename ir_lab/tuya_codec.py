@@ -13,17 +13,17 @@ def decode_tuya_ir(code: str) -> list[int]:
     """Decode a Tuya IR base64 string into raw microsecond timings."""
     normalized = "".join(str(code).split())
     if not normalized:
-        raise CodecError("Codice Tuya vuoto")
+        raise CodecError("Empty Tuya code")
     try:
         compressed = base64.b64decode(normalized.encode("ascii"), validate=True)
     except Exception as exc:  # noqa: BLE001
-        raise CodecError(f"Base64 Tuya non valido: {exc}") from exc
+        raise CodecError(f"Invalid Tuya base64: {exc}") from exc
     try:
         payload = decompress_tuya_stream(compressed)
     except Exception as exc:  # noqa: BLE001
-        raise CodecError(f"Impossibile decomprimere il payload Tuya: {exc}") from exc
+        raise CodecError(f"Cannot decompress Tuya payload: {exc}") from exc
     if len(payload) % 2:
-        raise CodecError(f"Payload decompresso di lunghezza dispari: {len(payload)} byte")
+        raise CodecError(f"Decompressed payload has odd length: {len(payload)} bytes")
     return [unpack_from("<H", payload, offset)[0] for offset in range(0, len(payload), 2)]
 
 
@@ -34,10 +34,10 @@ def encode_tuya_ir(raw: Iterable[int], compression_level: int = 0) -> str:
     than captures produced by the device, but deterministic and easy to inspect.
     """
     if compression_level != 0:
-        raise CodecError("L'encoder supporta per ora solo compression_level=0")
+        raise CodecError("The encoder currently supports compression_level=0 only")
     timings = [_sanitize_duration(value) for value in raw]
     if not timings:
-        raise CodecError("Raw vuoto")
+        raise CodecError("Empty raw timings")
     payload = b"".join(pack("<H", value) for value in timings)
     return base64.b64encode(emit_literal_stream(payload)).decode("ascii")
 
@@ -46,9 +46,9 @@ def _sanitize_duration(value: int | str) -> int:
     try:
         duration = int(value)
     except Exception as exc:  # noqa: BLE001
-        raise CodecError(f"Durata raw non numerica: {value!r}") from exc
+        raise CodecError(f"Non-numeric raw duration: {value!r}") from exc
     if duration < 0:
-        raise CodecError(f"Durata raw negativa: {duration}")
+        raise CodecError(f"Negative raw duration: {duration}")
     return min(duration, MAX_DURATION_US)
 
 
@@ -64,23 +64,23 @@ def decompress_tuya_stream(data: bytes) -> bytes:
         if length_tag == 0:
             length = distance_high + 1
             if pos + length > len(data):
-                raise CodecError("Literal block oltre fine payload")
+                raise CodecError("Literal block runs past end of payload")
             out.extend(data[pos : pos + length])
             pos += length
             continue
         length = length_tag
         if length == 7:
             if pos >= len(data):
-                raise CodecError("Length-distance block esteso senza byte length")
+                raise CodecError("Extended length-distance block missing its length byte")
             length += data[pos]
             pos += 1
         length += 2
         if pos >= len(data):
-            raise CodecError("Length-distance block senza byte distance")
+            raise CodecError("Length-distance block missing its distance byte")
         distance = ((distance_high << 8) | data[pos]) + 1
         pos += 1
         if distance > len(out):
-            raise CodecError(f"Distance non valida: {distance} byte, output {len(out)} byte")
+            raise CodecError(f"Invalid distance: {distance} bytes, output is {len(out)} bytes")
         for _ in range(length):
             out.append(out[-distance])
     return bytes(out)
@@ -109,5 +109,5 @@ def parse_raw_text(text: str) -> list[int]:
             continue
         raw.append(_sanitize_duration(part))
     if not raw:
-        raise CodecError("Nessuna durata raw trovata")
+        raise CodecError("No raw durations found")
     return raw

@@ -1,0 +1,42 @@
+name: New protocol
+description: Propose support for an air conditioner that is not covered yet
+labels: ["protocol"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! A new protocol always starts from samples: without them there is
+        nothing to analyse. See [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)
+        for how to capture them.
+
+  - type: input
+    id: brand
+    attributes:
+      label: Brand and model
+      placeholder: "e.g. Daikin FTXS35K"
+    validations:
+      required: true
+
+  - type: input
+    id: remote
+    attributes:
+      label: Remote control model
+      description: Usually printed on the back or inside the battery compartment.
+      placeholder: "e.g. ARC433B70"
+
+  - type: textarea
+    id: samples
+    attributes:
+      label: Captured samples
+      description: |
+        Attach your `data/remotes.json` export (drag the file here).
+        A single-variable sweep helps most: same mode and fan, only the
+        temperature changing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Unusual behaviour, non-standard functions, anything you already observed.
