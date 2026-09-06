@@ -1,4 +1,5 @@
-# midea_generator.py — generatore codici IR Midea camera
+# 
+# _generator.py — generatore codici IR Midea camera
 #
 # Protocollo decodificato tramite reverse engineering su campioni acquisiti
 # con blaster Tuya ZS05 via Zigbee2MQTT. Vedere docs/protocol_midea.md.
@@ -12,7 +13,7 @@
 from __future__ import annotations
 
 import struct
-from .tuya_codec import encode_tuya_ir
+from ..tuya_codec import encode_tuya_ir
 
 # ── Costanti di protocollo ──────────────────────────────────────────────────
 
@@ -129,7 +130,24 @@ def _build_raw(f1: list[int], f2: list[int]) -> list[int]:
     return raw
 
 
+# Byte fissi per power on/off — comandi speciali, non legati a modalità/temperatura
+_POWER_ON_F1  = [0x3C, 0x30, 0x06, _F1_B3]
+_POWER_ON_F2  = [0x60, 0x04, 0x00, 0x02]
+_POWER_OFF_F1 = [0x2C, 0x30, 0x04, _F1_B3]
+_POWER_OFF_F2 = [0x60, 0x04, 0x00, 0x03]
+
+
 # ── API pubblica ────────────────────────────────────────────────────────────
+
+def generate_power_on() -> list[int]:
+    """Genera raw timings per il comando power on."""
+    return _build_raw(_POWER_ON_F1, _POWER_ON_F2)
+
+
+def generate_power_off() -> list[int]:
+    """Genera raw timings per il comando power off."""
+    return _build_raw(_POWER_OFF_F1, _POWER_OFF_F2)
+
 
 def generate_raw(mode: str, temp: int) -> list[int]:
     """Genera raw timings IR per climatizzatore Midea camera.
@@ -178,7 +196,7 @@ def verify_against_db(db_path: str = "data/remotes.json") -> dict[str, list[str]
     """
     import json
     from pathlib import Path
-    from .raw_analyzer import analyze_raw
+    from ..raw_analyzer import analyze_raw
 
     with Path(db_path).open() as f:
         db = json.load(f)
@@ -211,7 +229,7 @@ def verify_against_db(db_path: str = "data/remotes.json") -> dict[str, list[str]
                 else:
                     results["fail"].append(
                         f"{label}: F1 gen={[hex(b) for b in gen_f1]} "
-                        f"real={[hex(b) for b in real_f1_clean]} | "
+                        f"real={[hex(b) for b in real_f1]} | "
                         f"F2 gen={[hex(b) for b in gen_f2]} "
                         f"real={[hex(b) for b in real_f2]}"
                     )

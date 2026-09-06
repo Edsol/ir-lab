@@ -17,7 +17,8 @@ from .prompts import confirm, key_value_tags, press_enter, select, text
 from .raw_analyzer import analyze_raw, format_analysis
 from .storage import DEFAULT_DATA_PATH, RemoteStore
 from .tuya_codec import decode_tuya_ir, encode_tuya_ir, parse_raw_text, raw_to_text
-from . import midea_generator
+from .generators import midea as midea_generator
+from .generators import electra as electra_generator
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -116,11 +117,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_delete.add_argument("--sample", default=None, type=int, help="Indice sample (0-based). Ometti per eliminare l'intero comando.")
     p_delete.set_defaults(func=cmd_delete)
 
-    p_generate = sub.add_parser("generate", help="Genera codice IR Midea senza telecomando fisico")
+    p_generate = sub.add_parser("generate", help="Genera codice IR senza telecomando fisico")
+    p_generate.add_argument("--protocol", choices=["midea", "electra"], default="midea",
+                            help="Protocollo: midea (Ferroli/Midea, default) | electra (Beko/AUX/Electra)")
     p_generate.add_argument("--mode", required=True, choices=["cool", "heat", "dry", "auto", "fan"],
                             help="Modalità: cool | heat | dry | auto | fan")
     p_generate.add_argument("--temp", type=int, default=22,
-                            help="Temperatura in °C (16-30, ignorata per fan). Default: 22")
+                            help="Temperatura in °C (ignorata per fan). Default: 22")
+    p_generate.add_argument("--fan", choices=["auto", "high", "mid", "low"], default="auto",
+                            help="Velocità ventola (solo electra): auto | high | mid | low. Default: auto")
+    p_generate.add_argument("--swing", action="store_true", help="Attiva swing verticale (solo electra)")
+    p_generate.add_argument("--power", choices=["on", "off"], default="on",
+                            help="Accendi o spegni (solo electra). Default: on")
     p_generate.add_argument("--format", choices=["tuya", "raw", "both"], default="tuya",
                             help="Formato output: tuya (default) | raw | both")
     p_generate.add_argument("--send", action="store_true", help="Invia il codice generato via MQTT")
@@ -387,8 +395,13 @@ def cmd_delete(args: argparse.Namespace) -> None:
 
 def cmd_generate(args: argparse.Namespace) -> None:
     try:
-        raw = midea_generator.generate_raw(args.mode, args.temp)
-        tuya = midea_generator.generate_tuya(args.mode, args.temp)
+        if args.protocol == "electra":
+            power_on = args.power != "off"
+            raw = electra_generator.generate_raw(args.mode, args.temp, fan=args.fan, power=power_on, swing_v=args.swing)
+            tuya = electra_generator.generate_tuya(args.mode, args.temp, fan=args.fan, power=power_on, swing_v=args.swing)
+        else:
+            raw = midea_generator.generate_raw(args.mode, args.temp)
+            tuya = midea_generator.generate_tuya(args.mode, args.temp)
     except ValueError as exc:
         raise IrLabError(str(exc)) from exc
 
@@ -401,7 +414,7 @@ def cmd_generate(args: argparse.Namespace) -> None:
         config = load_config(args.config)
         emitter = resolve_emitter(config, args.emitter)
         MqttIrClient(config.mqtt).send_tuya_code(emitter, tuya)
-        print(f"Inviato {args.mode} {args.temp}° tramite {emitter.name}")
+        print(f"Inviato {args.mode} {args.temp}° ({args.protocol}) tramite {emitter.name}")
 
 
 def cmd_list(args: argparse.Namespace) -> None:

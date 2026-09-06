@@ -10,3 +10,6 @@ config.yaml
 data/*.json
 !data/.gitkeep
 .env
+
+# macOS
+.DS_Store
