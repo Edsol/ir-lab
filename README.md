@@ -8,12 +8,20 @@
 
 **From captured IR signals to protocol generators.**
 
-A Python workbench for capturing remote commands, understanding their structure,
-and generating new codes for Home Assistant.
+A Python workbench to capture, inspect and replay commands from IR remotes.
+Currently focused on reverse-engineering air conditioner protocols and
+generating their commands for Home Assistant.
+
+Capture and analysis are not limited to air conditioners: you can also study
+IR remotes for TVs, fans, set-top boxes, amplifiers and other devices. Learning
+and replay depend on your blaster's support for the signal; generating new
+commands requires a protocol-specific generator. The generators currently
+included cover Midea and Electra air conditioner protocol families.
 
 ## Why IR Lab?
 
-An air conditioner remote often sends the **entire state** in each IR message:
+Air conditioners are the current focus because their remotes often send the
+**entire state** in each IR message:
 mode, temperature, fan speed and swing. Saving one code for every combination
 can mean collecting hundreds of codes.
 
@@ -21,7 +29,7 @@ IR Lab helps you capture controlled samples, find which bits change, and turn
 those findings into a **protocol generator**. Once a protocol is understood and
 verified, you can generate supported states you never captured individually.
 
-This is the reverse-engineering workbench. For everyday Home Assistant control,
+This is the reverse-engineering workbench. For everyday Home Assistant climate control,
 use [IRBridge](https://github.com/Edsol/irbridge), the separate integration where
 the verified generators are used.
 
